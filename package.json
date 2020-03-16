@@ -16,5 +16,8 @@
     "url": "https://github.com/psybiko/tinyapp/issues"
   },
   "homepage": "https://github.com/psybiko/tinyapp#readme",
-  "keywords": []
+  "keywords": [],
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
