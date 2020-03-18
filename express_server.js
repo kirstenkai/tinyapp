@@ -62,7 +62,14 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 
-})
+});
+
+// *******  Edit button is deleting the link *******
+app.post('/urls/:id', (req, res) => {
+  // console.log(req.params)
+  urlDatabase[req.params.id] = req.body.update;
+  res.redirect('/urls');
+});
 
 app.get('/', (req, res) => {
   res.send("Hello!");
