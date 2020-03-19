@@ -88,6 +88,11 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
+// registration template
+app.get('/register', (req, res) => {
+  res.render('registration');
+});
+
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
 
