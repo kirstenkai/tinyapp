@@ -50,7 +50,7 @@ app.get('/urls', (req, res) => {
   const user = users[user_id]
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies.username,
+    // user_id: req.cookies.username,
     user: req.cookies.user_id
   };
   res.render('urls_index', templateVars);
@@ -118,7 +118,8 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   // console.log('hi')
-  res.clearCookie("user_id");
+  const { email } = req.body;
+  res.clearCookie("user_id", email);
   res.redirect('/urls');
 });
 
