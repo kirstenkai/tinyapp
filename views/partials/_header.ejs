@@ -16,13 +16,18 @@
       <%if(user) { %>
       <form class="form-inline" method="POST" action="/logout">
         <div class="form-group mb-2">
+          
           <p>Logged In As: <%= user %>!</p>
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </div>
       </form>
       <% } else if (!user) { %>
-      <a href="../registration.ejs">Register</a>
-      <a href="../login.ejs">Login</a>
+      <!-- <a href="../registration.ejs">Register</a>
+      <a href="../login.ejs">Login</a> -->
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="../login">Login</a>
+        <a class="nav-item nav-link" href="../register">Register</a>
+      </div>
       <% }  %>
 
     </div>
