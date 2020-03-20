@@ -1,13 +1,14 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
-const PORT = 5000; // port 8080 wasn't working
+app.use(cookieParser());
+const PORT = 8080; 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
-const { checkEmail } = require('./helpers')
+
+const { checkEmail, validatePassword } = require('./helpers')
 
 // Using crypto module to create a randomized alphanumeric string
 const crypto = require('crypto');
@@ -33,7 +34,7 @@ let users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "1234",
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -89,22 +90,30 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // handle routing for login
 app.get('/login', (req, res) => {
   let templateVars = {
-    username: body.req.username,
+    user_id: req.body.user_id,
   };
   
-  res.render("urls_index", templateVars);
-  res.render("urls_new", templateVars);
-  res.render("urls_show", templateVars);
-  res.render('login');
+  // res.render("urls_index", templateVars);
+  // res.render("urls_new", templateVars);
+  // res.render("urls_show", templateVars);
+  res.render('login')
 });
 
-// endpoint for login page
-// app.get('/login', (req, res) => {
-// });
+
 
 app.post('/login', (req, res) => {
-  res.cookie("user_id", req.body.username);
-  res.redirect('/urls')
+  const {email, password} = req.body;
+  if ((checkEmail(users, email) === false)) {
+    res.statusCode = 403;
+    res.send(res.statusCode)
+  } else if (validatePassword(users, password) === false) {
+    res.statusCode = 403;
+    res.send(res.statusCode)
+  } else if (checkEmail(users, email) === true && validatePassword(users, password) === true){
+    res.statusCode = 200;
+    res.cookie("user_id", email);
+    res.redirect('/urls')
+  }
 });
 
 app.post('/logout', (req, res) => {
