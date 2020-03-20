@@ -7,6 +7,7 @@ app.use(bodyParser.urlencoded({
 }));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+const { checkEmail } = require('./helpers')
 
 // Using crypto module to create a randomized alphanumeric string
 const crypto = require('crypto');
@@ -28,10 +29,28 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+let users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
+
+
 app.get('/urls', (req, res) => {
+  const user_id = req.cookies.user_id
+  const user = users[user_id]
   let templateVars = {
     urls: urlDatabase,
     username: req.cookies.username,
+    user: req.cookies.user_id
   };
   res.render('urls_index', templateVars);
 });
@@ -70,28 +89,63 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // handle routing for login
 app.get('/login', (req, res) => {
   let templateVars = {
-    username: req.cookies.username,
+    username: body.req.username,
   };
+  
   res.render("urls_index", templateVars);
   res.render("urls_new", templateVars);
   res.render("urls_show", templateVars);
+  res.render('login');
 });
 
+// endpoint for login page
+// app.get('/login', (req, res) => {
+// });
 
 app.post('/login', (req, res) => {
-  res.cookie("username", req.body.username );
+  res.cookie("user_id", req.body.username);
   res.redirect('/urls')
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  // console.log('hi')
+  res.clearCookie("user_id");
   res.redirect('/urls');
 });
+
 
 // registration template
 app.get('/register', (req, res) => {
   res.render('registration');
 });
+
+// endpoint that handles the registration form data
+app.post('/register', (req, res) => {
+  let newUser = generateRandomString();
+  users[newUser] = {
+    id: newUser,
+    email: req.body.email,
+    password: req.body.password,
+  }
+  // Error handling
+  // Check if the email and password input are empty. If they are, then return a 400 status code 
+  let email = users[newUser].email
+  let password = users[newUser].password
+
+  if(email.length === 0 || password.length === 0) {
+    res.statusCode = 400;
+    res.send(res.statusCode);
+  } else if (checkEmail(users, email)) {
+    res.statusCode = 400;
+    res.send(res.statusCode);
+  }
+
+  res.cookie("user_id", users[newUser]);
+  res.redirect('/urls');
+
+});
+
+
 
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
@@ -108,12 +162,11 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get('/hello', (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get('/hello', (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
