@@ -59,7 +59,16 @@ app.get('/urls', (req, res) => {
 
 // Render urls_new template 
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  let templateVars = {
+    user: req.cookies.user_id
+  }
+
+  const { email } = req.body;
+  if (email === email) {
+    res.render('urls_new', templateVars);
+  } else {
+    res.render('/login', templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -67,8 +76,10 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
+    user: req.cookies.user_id,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
   };
@@ -81,7 +92,7 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  console.log("HELLO", req)
+  // console.log("HELLO", req)
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 
@@ -90,19 +101,20 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // handle routing for login
 app.get('/login', (req, res) => {
   let templateVars = {
-    user_id: req.body.user_id,
+    user: req.cookies.user_id
   };
   
   // res.render("urls_index", templateVars);
   // res.render("urls_new", templateVars);
   // res.render("urls_show", templateVars);
-  res.render('login')
+  res.render('login', templateVars)
 });
 
 
 
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
+
   if ((checkEmail(users, email) === false)) {
     res.statusCode = 403;
     res.send(res.statusCode)
@@ -117,7 +129,6 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  // console.log('hi')
   const { email } = req.body;
   res.clearCookie("user_id", email);
   res.redirect('/urls');
@@ -126,7 +137,10 @@ app.post('/logout', (req, res) => {
 
 // registration template
 app.get('/register', (req, res) => {
-  res.render('registration');
+  let templateVars = {
+    user: req.cookies.user_id
+  }
+  res.render('registration', templateVars);
 });
 
 // endpoint that handles the registration form data
@@ -137,6 +151,7 @@ app.post('/register', (req, res) => {
     email: req.body.email,
     password: req.body.password,
   }
+
   // Error handling
   // Check if the email and password input are empty. If they are, then return a 400 status code 
   let email = users[newUser].email
@@ -171,10 +186,6 @@ app.get('/', (req, res) => {
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
-
-// app.get('/hello', (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
 
 
 app.listen(PORT, () => {
