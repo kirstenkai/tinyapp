@@ -21,6 +21,21 @@ const checkEmail = (users, email) => {
   }
 };
 
+const findUser = (users, id) => {
+  return id ? users[id] : undefined
+}
+
+const findUserByEmail = (users, email) => { 
+    for (let id in users) {
+      const user = users[id];
+      if (user.email === email) {
+        return user;
+      }
+    }
+  }
+  
+
+
 
 const validatePassword = (users, password) => {
   for (let user in users) {
@@ -31,5 +46,9 @@ const validatePassword = (users, password) => {
   }
 };
 
-module.exports = { checkEmail, validatePassword };
+const verifyLogin = (users, email, password) => {
+  return checkEmail(users, email) && validatePassword(users, password)
+}
+
+module.exports = { checkEmail, validatePassword, findUser, verifyLogin, findUserByEmail };
 
