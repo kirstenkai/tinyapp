@@ -25,18 +25,24 @@
         </tr>
       </thead>
       <tbody>
-        
-        <% for(let url in urls) { %>
 
+        <!-- Check to see if the user is logged in. If they aren't, tell them to log in or register to access their URLs -->
+        <% if (user) { %>
+          <% for(let url in urls) { %>
         <tr>
           <form method="POST" action="/urls/<%= url%>/delete">
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
-            <td><a href="/urls/<%=url%>"></a><button type="submit" class="btn btn-outline-primary">Edit</button></a></td>
+            <td><a href="/urls/<%=url%>"></a><button type="submit" class="btn btn-outline-primary">Edit</button></a>
+            </td>
 
             <td><button type="submit" class="btn btn-outline-danger">Delete</button></td>
           </form>
         </tr>
+        <% } %>
+
+        <% } else { %>
+        <p>Please log in or register to see URLs</p>
         <% } %>
       </tbody>
     </table>
