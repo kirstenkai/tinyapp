@@ -1,21 +1,31 @@
+// requiring node modules
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const app = express();
-app.use(cookieParser());
-const PORT = 8080; 
+const crypto = require('crypto');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
+
+const PORT = 8080;
+
+const app = express();
+
+// Middlewear
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-const bcrypt = require('bcrypt');
+app.set('view engine', 'ejs');
 
+// Module exports
+const {
+  checkEmail,
+  validatePassword,
+  findUser,
+  verifyLogin,
+  findUserByEmail
+} = require('./helpers')
 
-
-const { checkEmail, validatePassword, findUser, verifyLogin, findUserByEmail} = require('./helpers')
-
-// Using crypto module to create a randomized alphanumeric string
-const crypto = require('crypto');
-
+// Create a random 6 alphanumeric string for shortURL
 function generateRandomString() {
   let random = crypto.randomBytes(3).toString('hex');
   return random
@@ -23,19 +33,16 @@ function generateRandomString() {
 
 let shortURL = generateRandomString();
 
-// --------------------------------------------
-
-app.set('view engine', 'ejs');
-
-// user res.render to load up an ejs view file
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 
@@ -43,20 +50,28 @@ let users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "1234",
+    password: "purple-monkey-dinosaur",
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   },
   "testId": {
     id: "testId",
     email: "test@gmail.com",
-    password: "test"
+    password: bcrypt.hashSync("test", 10)
   }
 };
 
+// GET routes
+app.get('/', (req, res) => {
+  res.send("Hello!");
+});
+
+app.get('/urls.json', (req, res) => {
+  res.json(urlDatabase);
+});
 
 app.get('/urls', (req, res) => {
   const userId = req.cookies.user_id
@@ -69,7 +84,6 @@ app.get('/urls', (req, res) => {
   };
   res.render('urls_index', templateVars);
 });
-
 
 // Render urls_new template 
 app.get('/urls/new', (req, res) => {
@@ -89,13 +103,6 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
-
-app.post("/urls", (req, res) => {
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
-
-
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id,
@@ -111,13 +118,6 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
-app.post('/urls/:shortURL/delete', (req, res) => {
-  // console.log("HELLO", req)
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
-
-});
-
 // handle routing for login
 app.get('/login', (req, res) => {
   let templateVars = {
@@ -127,9 +127,33 @@ app.get('/login', (req, res) => {
 });
 
 
+// registration template
+app.get('/register', (req, res) => {
+  let templateVars = {
+    user: req.cookies.user_id
+  }
+  res.render('registration', templateVars);
+});
+
+// ------------------------------------------
+
+// POST routes
+app.post("/urls", (req, res) => {
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.post('/urls/:shortURL/delete', (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+
+});
 
 app.post('/login', (req, res) => {
-  const { email, password } = req.body;
+  const {
+    email,
+    password
+  } = req.body;
 
   const verified = verifyLogin(users, email, password);
   const user = findUserByEmail(users, email);
@@ -155,13 +179,6 @@ app.post('/logout', (req, res) => {
 });
 
 
-// registration template
-app.get('/register', (req, res) => {
-  let templateVars = {
-    user: req.cookies.user_id
-  }
-  res.render('registration', templateVars);
-});
 
 // endpoint that handles the registration form data
 app.post('/register', (req, res) => {
@@ -171,13 +188,11 @@ app.post('/register', (req, res) => {
     email: req.body.email,
     password: req.body.password,
   }
-
-  // Error handling
-  // Check if the email and password input are empty. If they are, then return a 400 status code 
   let email = users[newUser].email
-  let password = users[newUser].password
+  let password = bcrypt.hashSync(users[newUser].password, 10)
+  console.log(password)
 
-  if(email.length === 0 || password.length === 0) {
+  if (email.length === 0 || password.length === 0) {
     res.statusCode = 400;
     res.send(res.statusCode);
   } else if (checkEmail(users, email)) {
@@ -194,7 +209,9 @@ app.post('/register', (req, res) => {
 
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
-  const { id } = req.body;
+  const {
+    id
+  } = req.body;
   // const verifyID = urlsForUser(id)
   if (id === id) {
     urlDatabase[req.params.id] = req.body.update;
@@ -204,15 +221,8 @@ app.post('/urls/:id', (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send("Hello!");
-});
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
-
+// listening on port 8080
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
