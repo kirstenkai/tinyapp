@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-const { checkEmail, validatePassword } = require('./helpers')
+const { checkEmail, validatePassword, findUser, verifyLogin, findUserByEmail } = require('./helpers')
 
 // Using crypto module to create a randomized alphanumeric string
 const crypto = require('crypto');
@@ -25,10 +25,16 @@ let shortURL = generateRandomString();
 app.set('view engine', 'ejs');
 
 // user res.render to load up an ejs view file
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
 
 let users = {
   "userRandomID": {
@@ -40,18 +46,23 @@ let users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  },
+  "testId": {
+    id: "testId",
+    email: "test@gmail.com",
+    password: "test"
   }
 };
 
 
-
 app.get('/urls', (req, res) => {
-  const user_id = req.cookies.user_id
-  const user = users[user_id]
+  const userId = req.cookies.user_id
+  // const user = users[user_id]
+  const user = findUser(users, userId)
   let templateVars = {
     urls: urlDatabase,
     // user_id: req.cookies.username,
-    user: req.cookies.user_id
+    user
   };
   res.render('urls_index', templateVars);
 });
@@ -59,17 +70,22 @@ app.get('/urls', (req, res) => {
 
 // Render urls_new template 
 app.get('/urls/new', (req, res) => {
-  let templateVars = {
-    user: req.cookies.user_id
+  // check if logged in: by looking at cookie
+  const userId = req.cookies.user_id
+  const user = findUser(users, userId)
+  const templateVars = {
+    user
   }
 
-  const { email } = req.body;
-  if (email === email) {
-    res.render('urls_new', templateVars);
+  if (user) {
+    // do something
+    res.render('urls_new', templateVars)
   } else {
-    res.render('/login', templateVars);
+    // redirect to login
+    res.redirect("/login")
   }
 });
+
 
 app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL;
@@ -81,13 +97,13 @@ app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
+    longURL: urlDatabase[req.params.shortURL].longURL
   };
   res.render('urls_show', templateVars);
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -101,12 +117,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // handle routing for login
 app.get('/login', (req, res) => {
   let templateVars = {
-    user: req.cookies.user_id
+    user: findUser(users)
   };
-  
-  // res.render("urls_index", templateVars);
-  // res.render("urls_new", templateVars);
-  // res.render("urls_show", templateVars);
   res.render('login', templateVars)
 });
 
@@ -115,16 +127,20 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
 
-  if ((checkEmail(users, email) === false)) {
-    res.statusCode = 403;
-    res.send(res.statusCode)
-  } else if (validatePassword(users, password) === false) {
-    res.statusCode = 403;
-    res.send(res.statusCode)
-  } else if (checkEmail(users, email) === true && validatePassword(users, password) === true){
+  const verified = verifyLogin(users, email, password);
+  const user = findUserByEmail(users, email);
+
+  if (verified) {
+    // user is logged in successfully
+    // go to entry page
     res.statusCode = 200;
-    res.cookie("user_id", email);
-    res.redirect('/urls')
+    res.cookie("user_id", user.id);
+    res.redirect('/urls');
+
+  } else {
+    // return a 403 status code
+    res.statusCode = 403;
+    res.send(res.statusCode);
   }
 });
 
