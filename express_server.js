@@ -7,8 +7,11 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+const bcrypt = require('bcrypt');
 
-const { checkEmail, validatePassword, findUser, verifyLogin, findUserByEmail } = require('./helpers')
+
+
+const { checkEmail, validatePassword, findUser, verifyLogin, findUserByEmail} = require('./helpers')
 
 // Using crypto module to create a randomized alphanumeric string
 const crypto = require('crypto');
@@ -97,13 +100,14 @@ app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL
+    longURL: urlDatabase[req.params.shortURL] // should have longURL
   };
   res.render('urls_show', templateVars);
 });
 
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
+  console.log("longURL", longURL)
   res.redirect(longURL);
 });
 
@@ -125,7 +129,7 @@ app.get('/login', (req, res) => {
 
 
 app.post('/login', (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
 
   const verified = verifyLogin(users, email, password);
   const user = findUserByEmail(users, email);
@@ -190,9 +194,14 @@ app.post('/register', (req, res) => {
 
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
-
-  urlDatabase[req.params.id] = req.body.update;
-  res.redirect('/urls');
+  const { id } = req.body;
+  // const verifyID = urlsForUser(id)
+  if (id === id) {
+    urlDatabase[req.params.id] = req.body.update;
+    res.redirect('/urls');
+  } else {
+    res.send("Please login to view your URLs")
+  }
 });
 
 app.get('/', (req, res) => {
