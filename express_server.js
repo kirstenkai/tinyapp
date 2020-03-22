@@ -182,26 +182,34 @@ app.post('/logout', (req, res) => {
 
 // endpoint that handles the registration form data
 app.post('/register', (req, res) => {
-  let newUser = generateRandomString();
-  users[newUser] = {
-    id: newUser,
-    email: req.body.email,
-    password: req.body.password,
-  }
-  let email = users[newUser].email
-  let password = bcrypt.hashSync(users[newUser].password, 10)
-  console.log(password)
+  const { email, password } = req.body;
 
-  if (email.length === 0 || password.length === 0) {
-    res.statusCode = 400;
-    res.send(res.statusCode);
-  } else if (checkEmail(users, email)) {
-    res.statusCode = 400;
-    res.send(res.statusCode);
+  let existingUser = false;
+  for (let user in users) {
+    if (user.email === email) {
+      existingUser = true
+    }
   }
 
-  res.cookie("user_id", users[newUser]);
-  res.redirect('/urls');
+  if (email === "" && password === "") {
+    res.send(400, "Email and Password cannot be empty");
+  } else if (existingUser) {
+    res.send(400, "username taken");
+  } else {
+    let pass = bcrypt.hashSync(password, 10);
+    let id = shortURL;
+
+    users[id] = {
+      id: id,
+      email: email,
+      password: pass,
+    }
+
+    urlDatabase[id] = {};
+
+    res.cookie("user_id", id);
+    res.redirect('/urls');
+  }
 
 });
 
