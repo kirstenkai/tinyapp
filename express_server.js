@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 
-const PORT = 8080;
+const PORT = 5000;
 
 const app = express();
 
@@ -50,7 +50,7 @@ let users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "1234",
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -75,7 +75,7 @@ app.get('/urls.json', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userId = req.cookies.user_id
-  // const user = users[user_id]
+
   const user = findUser(users, userId)
   let templateVars = {
     urls: urlDatabase,
@@ -144,9 +144,13 @@ app.post("/urls", (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
+  const id = urlDatabase[req.params.shortURL].userID
+  if (id !== urlDatabase[req.params.shortURL].userID) {
+    res.send(401);
+  } else {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
-
+  }
 });
 
 app.post('/login', (req, res) => {
