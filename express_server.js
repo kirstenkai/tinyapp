@@ -186,7 +186,7 @@ app.post('/register', (req, res) => {
 
   let existingUser = false;
   for (let user in users) {
-    if (user.email === email) {
+    if (users[user].email === email) {
       existingUser = true
     }
   }
