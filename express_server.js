@@ -4,17 +4,21 @@ const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session')
 
 const PORT = 5000;
 
 const app = express();
 
-// Middlewear
+// MIDDLEWARE
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
+app.set(cookieSession({
+  name: 'session',
+  secret: 'helloWorld',
+}))
+
 
 // Module exports
 const {
@@ -31,7 +35,6 @@ function generateRandomString() {
   return random
 }
 
-
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -43,7 +46,7 @@ const urlDatabase = {
   }
 };
 
-
+// Users Database
 let users = {
   "userRandomID": {
     id: "userRandomID",
@@ -64,6 +67,7 @@ let users = {
 
 // GET routes
 app.get('/', (req, res) => {
+  // console.log(r)
   res.send("Hello!");
 });
 
@@ -73,6 +77,7 @@ app.get('/urls.json', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userId = req.cookies.user_id
+  console.log(userId)
 
   const user = findUser(users, userId)
   let templateVars = {
@@ -86,6 +91,7 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   // check if logged in: by looking at cookie
   const userId = req.cookies.user_id
+  console.log(userId)
   const user = findUser(users, userId)
   const templateVars = {
     user
@@ -107,6 +113,7 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   }
+  console.log(templateVars.user)
   res.render('urls_show', templateVars);
 });
 
@@ -130,6 +137,7 @@ app.get('/register', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id
   }
+  console.log(templateVars.user)
   res.render('registration', templateVars);
 });
 
@@ -142,6 +150,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     userID: req.cookies.user_id
   };
+
   // should this redirect to the shortURL page or the home page
   res.redirect(`/urls/${shortURL}`);
 });
@@ -203,7 +212,7 @@ app.post('/register', (req, res) => {
     }
   }
 
-  if (email === "" && password === "") {
+  if (email === "" || password === "") {
     res.send(400, "Email and Password cannot be empty");
   } else if (existingUser) {
     res.send(400, "username taken");
@@ -229,6 +238,7 @@ app.post('/register', (req, res) => {
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
   const userID = req.cookies.user_id
+  console.log(userID)
   const { id } = req.params
 
   if(userID) {
