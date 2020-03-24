@@ -31,8 +31,6 @@ function generateRandomString() {
   return random
 }
 
-let shortURL = generateRandomString();
-
 
 const urlDatabase = {
   b6UTxQ: {
@@ -79,7 +77,6 @@ app.get('/urls', (req, res) => {
   const user = findUser(users, userId)
   let templateVars = {
     urls: urlDatabase,
-    // user_id: req.cookies.username,
     user
   };
   res.render('urls_index', templateVars);
@@ -103,12 +100,13 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
+
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL] // should have longURL
-  };
+    longURL: urlDatabase[req.params.shortURL].longURL
+  }
   res.render('urls_show', templateVars);
 });
 
@@ -139,12 +137,17 @@ app.get('/register', (req, res) => {
 
 // POST routes
 app.post("/urls", (req, res) => {
-  urlDatabase[shortURL] = req.body.longURL;
+  const shortURL = generateRandomString()
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  };
+  // should this redirect to the shortURL page or the home page
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const id = urlDatabase[req.params.shortURL].userID
+  const id = urlDatabase[req.params.shortURL]['userID']
   if (id !== urlDatabase[req.params.shortURL].userID) {
     res.send(401);
   } else {
@@ -161,14 +164,19 @@ app.post('/login', (req, res) => {
 
   const verified = verifyLogin(users, email, password);
   const user = findUserByEmail(users, email);
+  const hash = bcrypt.hashSync(password,10);
+
+  const hashPassword = bcrypt.compareSync(password, hash);
+  console.log(hashPassword)
 
   if (verified) {
     // user is logged in successfully
     // go to entry page
-    res.statusCode = 200;
-    res.cookie("user_id", user.id);
-    res.redirect('/urls');
-
+    if (hashPassword) {      
+      res.statusCode = 200;
+      res.cookie("user_id", user.id);
+      res.redirect('/urls');
+    }
   } else {
     // return a 403 status code
     res.statusCode = 403;
@@ -201,8 +209,7 @@ app.post('/register', (req, res) => {
     res.send(400, "username taken");
   } else {
     let pass = bcrypt.hashSync(password, 10);
-    let id = shortURL;
-
+    let id = generateRandomString();
     users[id] = {
       id: id,
       email: email,
@@ -221,12 +228,16 @@ app.post('/register', (req, res) => {
 
 // *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
-  const {
-    id
-  } = req.body;
-  // const verifyID = urlsForUser(id)
-  if (id === id) {
-    urlDatabase[req.params.id] = req.body.update;
+  const userID = req.cookies.user_id
+  const { id } = req.params
+
+  if(userID) {
+    urlDatabase[id] = {
+      userID: userID,
+      longURL: req.body.update
+    }
+
+
     res.redirect('/urls');
   } else {
     res.send("Please login to view your URLs")
