@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session')
 
-const PORT = 5000;
+const PORT = 8080;
 
 const app = express();
 
@@ -68,7 +68,7 @@ let users = {
 // GET routes
 app.get('/', (req, res) => {
   // console.log(r)
-  res.send("Hello!");
+  res.redirect('/login');
 });
 
 app.get('/urls.json', (req, res) => {
@@ -98,10 +98,8 @@ app.get('/urls/new', (req, res) => {
   }
 
   if (user) {
-    // do something
     res.render('urls_new', templateVars)
   } else {
-    // redirect to login
     res.redirect("/login")
   }
 });
@@ -113,7 +111,6 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   }
-  console.log(templateVars.user)
   res.render('urls_show', templateVars);
 });
 
@@ -233,12 +230,8 @@ app.post('/register', (req, res) => {
 
 });
 
-
-
-// *******  Edit button is deleting the link *******
 app.post('/urls/:id', (req, res) => {
   const userID = req.cookies.user_id
-  console.log(userID)
   const { id } = req.params
 
   if(userID) {
@@ -246,9 +239,8 @@ app.post('/urls/:id', (req, res) => {
       userID: userID,
       longURL: req.body.update
     }
-
-
     res.redirect('/urls');
+
   } else {
     res.send("Please login to view your URLs")
   }

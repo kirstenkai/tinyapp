@@ -17,7 +17,7 @@
         <%if (user) { %>
         <div class="form-group mb-2">
 
-          <p>Logged In As: <%= user.email %>!</p>
+          <a class = "nav-item nav-link">Logged In As: <%= user.email %>!</a>
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </div>
         <% } else { %>
