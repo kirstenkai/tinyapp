@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session')
 
-const PORT = 8080;
+const PORT = 3000;
 
 const app = express();
 
@@ -134,7 +134,6 @@ app.get('/register', (req, res) => {
   let templateVars = {
     user: req.cookies.user_id
   }
-  console.log(templateVars.user)
   res.render('registration', templateVars);
 });
 
