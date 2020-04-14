@@ -26,7 +26,8 @@ const {
   validatePassword,
   findUser,
   verifyLogin,
-  findUserByEmail
+  findUserByEmail,
+  urlsForUser
 } = require('./helpers')
 
 // Create a random 6 alphanumeric string for shortURL
@@ -67,7 +68,6 @@ let users = {
 
 // GET routes
 app.get('/', (req, res) => {
-  // console.log(r)
   res.redirect('/login');
 });
 
@@ -77,21 +77,19 @@ app.get('/urls.json', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userId = req.cookies.user_id
-  console.log(userId)
-
   const user = findUser(users, userId)
+  const urls = urlsForUser(user, urlDatabase)
   let templateVars = {
-    urls: urlDatabase,
+    urls,
     user
   };
   res.render('urls_index', templateVars);
 });
 
-// Render urls_new template 
+// Render urls_new template
 app.get('/urls/new', (req, res) => {
   // check if logged in: by looking at cookie
   const userId = req.cookies.user_id
-  console.log(userId)
   const user = findUser(users, userId)
   const templateVars = {
     user
@@ -104,8 +102,9 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
-
+// set a condition for if a user has a matching id s
 app.get('/urls/:shortURL', (req, res) => {
+
   let templateVars = {
     user: req.cookies.user_id,
     shortURL: req.params.shortURL,
@@ -116,7 +115,6 @@ app.get('/urls/:shortURL', (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  console.log("longURL", longURL)
   res.redirect(longURL);
 });
 
@@ -172,12 +170,12 @@ app.post('/login', (req, res) => {
   const hash = bcrypt.hashSync(password,10);
 
   const hashPassword = bcrypt.compareSync(password, hash);
-  console.log(hashPassword)
+
 
   if (verified) {
     // user is logged in successfully
     // go to entry page
-    if (hashPassword) {      
+    if (hashPassword) {
       res.statusCode = 200;
       res.cookie("user_id", user.id);
       res.redirect('/urls');
@@ -220,8 +218,6 @@ app.post('/register', (req, res) => {
       email: email,
       password: pass,
     }
-
-    urlDatabase[id] = {};
 
     res.cookie("user_id", id);
     res.redirect('/urls');

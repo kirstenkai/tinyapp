@@ -21,17 +21,23 @@ const findUserByEmail = (users, email) => {
   }
 }
 
-const urlsForUser = (id) => {
-  // returns the URLs where the userID is equal to the id of the currently logged-in user.
-  let usersDatabase = {};
-  for (url in urlDatabase) {
-    if (id === urlDatabase[url].userID) {
-      usersDatabase[url] = urlDatabase[url]
+
+const urlsForUser = (user, urls) => {
+  if (!user) {
+    return {}
+  }
+  const userID = user.id
+  const filterURLs = {}
+
+  for (let shortURL in urls) {
+    const url = urls[shortURL]
+    if (userID === url.userID) {
+      filterURLs[shortURL] = url;
     }
   }
-  return usersDatabase;
+  return filterURLs
 
-};
+}
 
 const validatePassword = (users, password) => {
   for (let user in users) {
@@ -53,5 +59,5 @@ module.exports = {
   findUser,
   verifyLogin,
   findUserByEmail,
-  urlsForUser,
+  urlsForUser
 };
