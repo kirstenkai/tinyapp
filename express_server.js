@@ -102,7 +102,6 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
-// set a condition for if a user has a matching id s
 app.get('/urls/:shortURL', (req, res) => {
 
   let templateVars = {
@@ -145,7 +144,6 @@ app.post("/urls", (req, res) => {
     userID: req.cookies.user_id
   };
 
-  // should this redirect to the shortURL page or the home page
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -173,15 +171,13 @@ app.post('/login', (req, res) => {
 
 
   if (verified) {
-    // user is logged in successfully
-    // go to entry page
+
     if (hashPassword) {
       res.statusCode = 200;
       res.cookie("user_id", user.id);
       res.redirect('/urls');
     }
   } else {
-    // return a 403 status code
     res.statusCode = 403;
     res.send(res.statusCode);
   }
